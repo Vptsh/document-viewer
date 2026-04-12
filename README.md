@@ -19,7 +19,6 @@ Supports a wide range of document types:
 - XLS / XLSX  
 - PPT / PPTX  
 - ODT / ODS / ODP  
-- CSV, TXT  
 
 ---
 
