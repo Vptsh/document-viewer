@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
 <title>Document Viewer</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -34,6 +34,1061 @@ body {
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  height: 100dvh;
+}
+
+/* ══ SCROLL PROGRESS BAR ══ */
+#scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--blue);
+  z-index: 10000;
+  display: none;
+  border-radius: 0 2px 2px 0;
+  transition: width 0.08s linear;
+  box-shadow: 0 0 6px rgba(0,122,255,0.4);
+}
+
+/* ══ TOPBAR ══ */
+#topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  padding: 0 14px;
+  background: var(--card);
+  border-bottom: 1px solid var(--sep);
+  flex-shrink: 0;
+  gap: 10px;
+}
+.topbar-title {
+  font-size: 13.5px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+}
+.topbar-actions { display:flex; gap:6px; flex-shrink:0; }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,122,255,0.1);
+  color: var(--blue);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .12s;
+  flex-shrink: 0;
+}
+.icon-btn:hover  { background: rgba(0,122,255,0.18); }
+.icon-btn:active { transform: scale(0.86); }
+.icon-btn svg {
+  width: 15px; height: 15px;
+  stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ══ CENTER ══ */
+.center {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 18px;
+  overflow-y: auto;
+}
+
+/* ══ CARD ══ */
+.card {
+  background: var(--card);
+  padding: 28px 24px 24px;
+  border-radius: 20px;
+  max-width: 390px; width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* ══ ICON — plain circle, no rounded-square ══ */
+.icon {
+  width: 68px; height: 68px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,122,255,0.09);
+  position: relative;
+}
+.icon svg { width: 28px; height: 28px; stroke: var(--blue); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.icon.error-icon   { background: rgba(255,59,48,0.09);  animation: none; }
+.icon.error-icon svg { stroke: var(--red); }
+.icon.neutral-icon { background: rgba(142,142,147,0.1); animation: none; }
+.icon.neutral-icon svg { stroke: var(--muted); }
+.icon.warn-icon    { background: rgba(255,149,0,0.09);  animation: none; }
+.icon.warn-icon svg { stroke: var(--orange); }
+
+/* ══ LOADING ICON WITH BOUNCING ARC ══ */
+.loader-icon-wrap {
+  position: relative;
+  width: 88px; height: 88px;
+  margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.loader-icon-wrap .file-circle {
+  width: 88px; height: 88px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 1;
+  background: none;
+}
+.loader-icon-wrap .file-circle svg {
+  width: 44px; height: 44px;
+}
+/* Spinning arc ring — uniform color with dash gap */
+.loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(0,122,255,0.15);
+  border-top-color: var(--blue);
+  border-right-color: var(--blue);
+  border-bottom-color: var(--blue);
+  animation: ring-spin 1s linear infinite;
+}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0);    }
+  45%       { transform: translateY(-9px); }
+  65%       { transform: translateY(-4px); }
+}
+
+/* ══ TEXT ══ */
+h2 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+.sub { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+/* ══ HINT PILLS ══ */
+.hint-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center;
+  margin: 14px 0 0;
+}
+.pill {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(0,122,255,0.08);
+  color: var(--blue);
+  letter-spacing: 0.02em;
+}
+
+/* ══ DROPZONE TOGGLE ══ */
+.upload-trigger {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 13px;
+  border: 1.5px dashed rgba(0,122,255,0.35);
+  cursor: pointer;
+  color: var(--blue);
+  font-size: 13px; font-weight: 600;
+  background: rgba(0,122,255,0.04);
+  transition: background .18s, border-color .18s;
+  user-select: none;
+}
+.upload-trigger:hover { background: rgba(0,122,255,0.08); border-color: rgba(0,122,255,0.6); }
+.upload-trigger svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+.dropzone { display: none; } /* hidden until toggled */
+.dropzone.open { display: block; margin-top: 10px; }
+
+/* ══ DROPZONE ══ */
+.dropzone {
+  border: 2px dashed rgba(0,122,255,0.3);
+  border-radius: 14px;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+}
+.dropzone.dragging {
+  border-color: var(--blue);
+  background: rgba(0,122,255,0.05);
+}
+.dropzone-icon-wrap {
+  width: 56px; height: 56px;
+  margin: 0 auto 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.dropzone-icon-wrap svg { width: 48px; height: 48px; }
+.dropzone-label { font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 3px; }
+.dropzone-sub   { font-size: 11.5px; color: var(--muted); }
+.dropzone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+/* ══ DIVIDER ══ */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0;
+  font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--sep);
+}
+
+/* ══ INPUT ══ */
+.input-wrap { position: relative; }
+.input {
+  width: 100%; padding: 11px 36px 11px 13px;
+  border-radius: 13px; border: 1.5px solid var(--sep);
+  background: var(--bg); color: var(--text);
+  font-size: 13px; outline: none;
+  transition: border-color .2s;
+}
+[data-theme="dark"] .input { border-color: rgba(255,255,255,0.1); }
+.input:focus { border-color: var(--blue); }
+.input-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  font-size: 18px; line-height: 1; display: none; padding: 2px 4px;
+}
+
+/* ══ BUTTON ══ */
+.btn {
+  margin-top: 14px; width: 100%;
+  padding: 12px 20px; border-radius: 13px; border: none;
+  background: var(--blue); color: #fff;
+  font-weight: 600; font-size: 14px;
+  cursor: pointer; transition: opacity .15s, transform .12s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn:hover  { opacity: .88; }
+.btn:active { transform: scale(0.97); }
+.btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ══ RETRY DOTS ══ */
+.retry-dots { display: flex; justify-content: center; gap: 10px; margin: 16px 0 4px; }
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #E5E5EA; transition: background .3s, transform .3s;
+}
+[data-theme="dark"] .dot { background: #3A3A3C; }
+.dot.active { background: var(--blue); transform: scale(1.35); }
+.dot.done   { background: var(--green); }
+.dot.failed { background: var(--red); }
+
+/* ══ PROGRESS ══ */
+.progress-wrap {
+  margin-top: 14px; height: 4px;
+  background: rgba(0,0,0,0.06); border-radius: 4px; overflow: hidden;
+}
+[data-theme="dark"] .progress-wrap { background: rgba(255,255,255,0.07); }
+.progress-bar {
+  height: 100%; background: var(--blue); border-radius: 4px;
+  width: 0%; transition: width .5s ease;
+}
+
+/* ══ PROVIDER BADGE ══ */
+.provider-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  background: rgba(0,0,0,0.04); border-radius: 20px;
+  padding: 4px 11px; margin-top: 12px; letter-spacing: .01em;
+}
+[data-theme="dark"] .provider-badge { background: rgba(255,255,255,0.06); }
+.pdot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--orange);
+  animation: pdot 1.4s ease-in-out infinite;
+}
+@keyframes pdot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.6);} }
+
+/* ══ VIEWER ══ */
+#viewer-wrap {
+  display: none; flex: 1; min-height: 0;
+  padding: 6px;
+  padding-top: 10px;
+  background: var(--bg);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#viewer {
+  width: 100%; height: 100%;
+  min-height: 600px;
+  border: none; border-radius: 12px;
+  display: block;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  touch-action: pan-x pan-y pinch-zoom;
+  overflow: auto;
+}
+
+/* ══ FOOTER — same bg as topbar/card ══ */
+footer {
+  background: var(--card);
+  border-top: 1px solid var(--sep);
+  text-align: center;
+  font-size: 11.5px; color: var(--muted);
+  padding: 8px 12px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.heart {
+  color: var(--red); font-size: 13px; display: inline-block;
+  animation: beat 1.2s infinite;
+}
+@keyframes beat { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }
+
+/* ══ TOAST ══ */
+#toast {
+  position: fixed; bottom: 52px; left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  background: rgba(28,28,30,0.9); color: #fff;
+  font-size: 12.5px; font-weight: 500;
+  padding: 9px 18px; border-radius: 20px;
+  opacity: 0; transition: opacity .22s, transform .22s;
+  pointer-events: none; white-space: nowrap; z-index: 9999;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  max-width: 90vw; text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ══ SCROLL PROGRESS BAR ══ -->
+<div id="scroll-progress"></div>
+
+<!-- ══ TOP BAR (shown after load) ══ -->
+<div id="topbar">
+  <span class="topbar-title" id="topbarTitle">Document</span>
+  <div class="topbar-actions">
+    <button class="icon-btn" onclick="downloadFile()" title="Download">
+      <!-- Download arrow -->
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="icon-btn" onclick="reloadViewer()" title="Reload">
+      <!-- Refresh -->
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    </button>
+    <button class="icon-btn" onclick="goHome()" title="Close viewer">
+      <!-- X / Close -->
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══ LOADING STATE ══ -->
+<div id="loader" class="center">
+  <div class="card">
+    <div class="loader-icon-wrap">
+      <div class="file-circle" style="background:none;">
+        <svg width="38" height="44" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 0 H32 L46 14 V54 A6 6 0 0 1 40 60 H6 A6 6 0 0 1 0 54 V6 A6 6 0 0 1 6 0Z" fill="#EFF6FF"/>
+          <path d="M32 0 L46 14 H32Z" fill="#BFDBFE"/>
+          <line x1="10" y1="26" x2="36" y2="26" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="10" y1="34" x2="36" y2="34" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="10" y1="42" x2="24" y2="42" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="loader-ring"></div>
+    </div>
+    <h2 id="loaderTitle">Loading Document</h2>
+    <p class="sub" id="loaderDesc">Preparing your file…</p>
+
+    <div class="retry-dots">
+      <div class="dot active" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="provider-badge">
+      <span class="pdot"></span>
+      <span id="providerName">Detecting…</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ERROR / ENTRY STATE ══ -->
+<div id="errorBox" class="center hidden">
+  <div class="card">
+    <div id="errorIcon" style="width:72px;height:72px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;animation:icon-bounce 1.6s ease-in-out infinite;">
+      <svg width="52" height="60" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 0 H32 L46 14 V54 A6 6 0 0 1 40 60 H6 A6 6 0 0 1 0 54 V6 A6 6 0 0 1 6 0Z" fill="#EFF6FF"/>
+        <path d="M32 0 L46 14 H32Z" fill="#BFDBFE"/>
+        <line x1="10" y1="26" x2="36" y2="26" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="10" y1="34" x2="36" y2="34" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="10" y1="42" x2="24" y2="42" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h2 id="errorText">Open a Document</h2>
+    <p class="sub" id="errorSub">Drop a file, pick one from device, or paste a URL</p>
+
+    <!-- Format hint pills -->
+    <div class="hint-row">
+      <span class="pill">PDF</span>
+      <span class="pill">DOCX</span>
+      <span class="pill">XLSX</span>
+      <span class="pill">PPTX</span>
+      <span class="pill">ODP</span>
+      <span class="pill">ODT</span>
+    </div>
+
+    <!-- Drop zone toggle -->
+    <div class="upload-trigger" id="uploadTrigger" onclick="toggleDropzone()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+      </svg>
+      Upload from device
+    </div>
+
+    <!-- Drop zone (hidden by default) -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput"
+             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.oasis.opendocument.text,application/vnd.oasis.opendocument.spreadsheet,application/vnd.oasis.opendocument.presentation"
+             onchange="onFileInputChange(this.files[0])">
+      <div class="dropzone-icon-wrap">
+        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="4" width="36" height="46" rx="5" fill="#DBEAFE"/>
+          <path d="M36 4 L44 12 H36 V4Z" fill="#93C5FD"/>
+          <path d="M36 4 H13a5 5 0 0 0-5 5v36a5 5 0 0 0 5 5h30a5 5 0 0 0 5-5V12Z" stroke="#3B82F6" stroke-width="2" fill="none" stroke-linejoin="round"/>
+          <line x1="16" y1="24" x2="36" y2="24" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="16" y1="31" x2="36" y2="31" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="16" y1="38" x2="27" y2="38" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="dropzone-label">Drop file here or tap to browse</div>
+      <div class="dropzone-sub">Uploaded via catbox.moe — expires in 72h, nothing stored locally</div>
+    </div>
+
+    <div class="divider">or paste URL</div>
+
+    <div class="input-wrap">
+      <input id="urlInput" class="input" placeholder="https://example.com/file.pdf"
+             oninput="onInputChange()"
+             onkeydown="if(event.key==='Enter') submitUrl()">
+      <button class="input-clear" id="clearBtn" onclick="clearInput()">×</button>
+    </div>
+
+    <button class="btn" onclick="submitUrl()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Load from URL
+    </button>
+  </div>
+</div>
+
+<!-- ══ VIEWER WRAPPER (with padding) ══ -->
+<div id="viewer-wrap">
+  <iframe id="viewer" allowfullscreen></iframe>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer>Developed by Vineet with <span class="heart">♥</span></footer>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
+
+<script>
+/* ═══════════ UTILS ═══════════ */
+function getParam(p){ return new URLSearchParams(window.location.search).get(p); }
+
+function normalize(url){
+  if(!url) return null;
+  url = url.trim();
+  if(!/^https?:\/\//i.test(url)) url = 'https://'+url;
+  return url;
+}
+function isValid(url){ return /^https?:\/\/.+/i.test(url||''); }
+
+function getExt(url){
+  try{
+    const path = new URL(url).pathname.toLowerCase();
+    const m = path.match(/\.([a-z0-9]{2,5})(\?|#|$)/);
+    return m ? m[1] : '';
+  }catch(e){ return ''; }
+}
+
+function getFilename(url){
+  try{
+    const path = new URL(url).pathname;
+    return decodeURIComponent(path.split('/').pop()) || 'Document';
+  }catch(e){ return 'Document'; }
+}
+
+function toast(msg, dur){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> t.classList.remove('show'), dur||2600);
+}
+
+/* ═══════════ STATE ═══════════ */
+const MAX_RETRIES = 3;
+let attempt     = 0;
+let iframeReady = false;
+let _loadTO     = null;
+let _retryTO    = null;
+let _progTO     = null;
+let currentFile = null;   // remote URL
+let localObjURL = null;   // blob URL for local files
+
+const OFFICE_EXTS = ['doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp'];
+const PDF_EXTS    = ['pdf'];
+const DIRECT_EXTS = [];
+
+/* ═══════════ PROVIDER LOGIC ═══════════
+   1. Google Docs gview  (most reliable)
+   2. Google Drive viewer (alternate endpoint)
+   3. Microsoft Office Online (final fallback for supported types)
+   For local Blob URLs we skip cloud viewers entirely → direct embed.
+══════════════════════════════════════ */
+function resolveViewer(fileURL, att, isLocal){
+  const ext = getExt(fileURL) || 'pdf';
+  const enc = encodeURIComponent(fileURL);
+
+  if(isLocal) return { url: fileURL, name: 'Local Preview' };
+  if(DIRECT_EXTS.includes(ext)) return { url: fileURL, name: 'Native Browser' };
+
+  const isOffice = ['doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp'].includes(ext);
+
+  if(isOffice){
+    switch(att){
+      case 1: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer' };
+      case 2: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
+      case 3: return { url: 'https://docs.google.com/viewer?url='+enc+'&embedded=true', name: 'Google Drive Viewer' };
+      default: return { url: fileURL, name: 'Native Browser' };
+    }
+  }
+
+  // PDF — Google Docs first, Microsoft as fallback
+  switch(att){
+    case 1: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
+    case 2: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc,  name: 'Microsoft Office Viewer' };
+    case 3: return { url: 'https://docs.google.com/viewer?url='+enc+'&embedded=true', name: 'Google Drive Viewer' };
+    default: return { url: fileURL, name: 'Native Browser' };
+  }
+}
+
+/* ═══════════ DOT / PROGRESS ═══════════ */
+function setDot(n, state){
+  const d = document.getElementById('dot'+n);
+  if(d) d.className = 'dot '+(state||'');
+}
+
+function setProgress(pct){
+  document.getElementById('progressBar').style.width = pct+'%';
+}
+
+function animateProgress(from, to, dur){
+  clearTimeout(_progTO);
+  const steps  = 40;
+  const stepT  = dur/steps;
+  const stepV  = (to-from)/steps;
+  let cur = from;
+  (function tick(){
+    cur = Math.min(cur+stepV, to);
+    setProgress(cur);
+    if(cur < to) _progTO = setTimeout(tick, stepT);
+  })();
+}
+
+/* ═══════════ SHOW / HIDE ═══════════ */
+function showLoader(){
+  document.getElementById('loader').classList.remove('hidden');
+  document.getElementById('errorBox').classList.add('hidden');
+  document.getElementById('viewer-wrap').style.display = 'none';
+  document.getElementById('topbar').style.display = 'none';
+}
+
+function showEntry(title, sub, iconClass){
+  clearTimeout(_loadTO); clearTimeout(_retryTO); clearTimeout(_progTO);
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('errorBox').classList.remove('hidden');
+  document.getElementById('viewer-wrap').style.display = 'none';
+  document.getElementById('topbar').style.display = 'none';
+  document.getElementById('errorText').textContent  = title || 'Open a Document';
+  document.getElementById('errorSub').textContent   = sub   || 'Drop a file or paste a URL';
+  // Only apply icon class for error/warn states; leave neutral as custom SVG
+  const el = document.getElementById('errorIcon');
+  if(iconClass && iconClass !== 'neutral-icon'){
+    el.className = 'icon ' + iconClass;
+    el.innerHTML = iconClass === 'error-icon'
+      ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  }
+}
+
+function revealViewer(title){
+  iframeReady = true;
+  clearTimeout(_loadTO); clearTimeout(_progTO);
+  setProgress(100);
+  setDot(attempt, 'done');
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('errorBox').classList.add('hidden');
+  // Unhide the iframe itself first
+  const iframe = document.getElementById('viewer');
+  iframe.style.display = 'block';
+  const vw = document.getElementById('viewer-wrap');
+  vw.style.display = 'flex';
+  vw.style.flexDirection = 'column';
+  document.getElementById('topbar').style.display = 'flex';
+  document.getElementById('topbarTitle').textContent = title || getFilename(currentFile||'');
+  // Init scroll progress bar after a brief settle
+  setTimeout(initScrollProgress, 600);
+}
+
+/* ═══════════ RETRY LOADER ═══════════ */
+function tryLoad(fileURL, att, isLocal, title){
+  if(att > MAX_RETRIES){
+    for(let i=1;i<=MAX_RETRIES;i++) setDot(i,'failed');
+    showEntry(
+      'Failed to load document',
+      'All attempts failed. Check the URL or try a different file.',
+      'error-icon'
+    );
+    return;
+  }
+
+  attempt     = att;
+  iframeReady = false;
+  clearTimeout(_loadTO); clearTimeout(_retryTO);
+
+  for(let i=1;i<=MAX_RETRIES;i++){
+    if(i < att)       setDot(i,'done');
+    else if(i===att)  setDot(i,'active');
+    else              setDot(i,'');
+  }
+
+  const basePct = Math.round(((att-1)/MAX_RETRIES)*60);
+  setProgress(basePct);
+  animateProgress(basePct, 98, att===1 ? 8000 : 5500);
+  // Auto-complete bar after timeout so it always reaches 100 visually
+  setTimeout(()=>{ if(!iframeReady) setProgress(100); }, att===1 ? 9000 : 6500);
+
+  const {url, name} = resolveViewer(fileURL, att, isLocal);
+  document.getElementById('providerName').textContent = name;
+  document.getElementById('loaderTitle').textContent  =
+    att===1 ? 'Loading Document' : 'Retrying… ('+att+'/'+MAX_RETRIES+')';
+  document.getElementById('loaderDesc').textContent   =
+    att===1 ? 'Via '+name : 'Switching to '+name+'…';
+
+  const iframe = document.getElementById('viewer');
+  iframe.style.display = 'none';
+
+  const TIMEOUT = isLocal ? 6000 : 14000;
+
+  _loadTO = setTimeout(()=>{
+    if(!iframeReady){
+      toast('Attempt '+att+' timed out — retrying…');
+      setDot(att,'failed');
+      _retryTO = setTimeout(()=> tryLoad(fileURL, att+1, isLocal, title), 700);
+    }
+  }, TIMEOUT);
+
+  iframe.onerror = function(){
+    clearTimeout(_loadTO);
+    if(iframeReady) return;
+    setDot(att,'failed');
+    _retryTO = setTimeout(()=> tryLoad(fileURL, att+1, isLocal, title), 600);
+  };
+
+  iframe.onload = function(){
+    clearTimeout(_loadTO);
+    if(iframeReady) return;
+
+    // For Google viewer: blank/error frames still fire onload.
+    // Try to detect by reading document title or body length via contentDocument.
+    // For cross-origin frames we can't read content — rely on a post-load blank check:
+    // Google gview shows a blank white page when it can't load the doc.
+    // We give it a generous settle time and then check size heuristic via iframe dimensions
+    // (the iframe stays tiny/blank if the doc failed). We rely on the timeout as the guard.
+    const settleMs = isLocal ? 300 : (att === 3 ? 2500 : 1200);
+
+    setTimeout(()=>{
+      if(!iframeReady){
+        // Check if iframe has rendered content by seeing if it loaded something real
+        // For same-origin blobs we can check; for cross-origin we trust onload
+        try {
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          const bodyText = doc.body ? doc.body.innerText.trim() : '';
+          const bodyHTML = doc.body ? doc.body.innerHTML.trim() : '';
+          // Google viewer blank error page has very short body or just a reload button
+          if(bodyText.length < 30 && !isLocal){
+            setDot(att,'failed');
+            _retryTO = setTimeout(()=> tryLoad(fileURL, att+1, isLocal, title), 500);
+            return;
+          }
+        } catch(e) {
+          // Cross-origin — can't read. If we got here, trust that it loaded.
+        }
+        revealViewer(title);
+      }
+    }, settleMs);
+  };
+
+  iframe.src = url;
+}
+
+/* ═══════════ UPLOAD PROVIDERS ═══════════
+   Priority 1: litterbox.catbox.moe
+     - Full CORS (Access-Control-Allow-Origin: *)
+     - Returns plain-text direct URL (e.g. https://litter.catbox.moe/abc.pdf)
+     - Google Docs Viewer can fetch this directly
+     - Free, no auth, 1GB limit, expires after 72h
+   Priority 2: tmpfiles.org
+     - Returns JSON with URL; swap /tmpfiles.org/ → /tmpfiles.org/dl/ for direct link
+     - Full CORS, Google Docs compatible
+═══════════════════════════════════════ */
+
+async function uploadToCatbox(file){
+  const fd = new FormData();
+  fd.append('reqtype',     'fileupload');
+  fd.append('time',        '72h');
+  fd.append('fileToUpload', file);
+  const res = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
+    method: 'POST',
+    body:   fd
+  });
+  if(!res.ok) throw new Error('catbox HTTP ' + res.status);
+  const txt = (await res.text()).trim();
+  // Response is a plain URL like https://litter.catbox.moe/xxxxxx.pdf
+  if(!txt.startsWith('http')) throw new Error('catbox bad response: ' + txt.slice(0, 80));
+  return txt;
+}
+
+async function uploadToTmpfiles(file){
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+    method: 'POST',
+    body:   fd
+  });
+  if(!res.ok) throw new Error('tmpfiles HTTP ' + res.status);
+  const j = await res.json();
+  if(j.status !== 'success' || !j.data || !j.data.url) throw new Error('tmpfiles bad response');
+  // Convert page URL to direct download URL: /tmpfiles.org/ → /tmpfiles.org/dl/
+  return j.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+}
+
+async function handleLocalFile(file){
+  if(!file) return;
+
+  if(localObjURL){ URL.revokeObjectURL(localObjURL); localObjURL = null; }
+
+  showLoader();
+  resetDots();
+  setProgress(0);
+  iframeReady = false;
+  currentFile = null;
+
+  document.getElementById('providerName').textContent = 'catbox.moe';
+  document.getElementById('loaderTitle').textContent  = 'Uploading File';
+  document.getElementById('loaderDesc').textContent   = file.name;
+  setDot(1, 'active');
+  animateProgress(0, 50, 15000);
+
+  let uploadedURL = null;
+
+  // Try catbox first
+  try {
+    uploadedURL = await uploadToCatbox(file);
+    console.log('catbox URL:', uploadedURL);
+  } catch(err){
+    console.warn('catbox failed:', err.message);
+  }
+
+  // Fallback: tmpfiles.org
+  if(!uploadedURL){
+    try {
+      document.getElementById('providerName').textContent = 'tmpfiles.org';
+      uploadedURL = await uploadToTmpfiles(file);
+      console.log('tmpfiles URL:', uploadedURL);
+    } catch(err){
+      console.warn('tmpfiles failed:', err.message);
+    }
+  }
+
+  if(uploadedURL){
+    currentFile = uploadedURL;
+    localObjURL = null;
+    document.getElementById('urlInput').value = uploadedURL;
+    onInputChange();
+    setDot(1, 'done');
+    setProgress(55);
+    document.getElementById('providerName').textContent = 'Detecting…';
+    document.getElementById('loaderTitle').textContent  = 'Loading Document';
+    document.getElementById('loaderDesc').textContent   = file.name;
+    setTimeout(()=> tryLoad(uploadedURL, 1, false, file.name), 300);
+
+  } else {
+    // All uploads failed — blob preview as last resort (works for PDF/txt natively)
+    toast('Upload failed — using local preview');
+    setDot(1, 'failed');
+
+    const blobURL = URL.createObjectURL(file);
+    localObjURL   = blobURL;
+    currentFile   = null;
+
+    document.getElementById('providerName').textContent = 'Local Preview';
+    document.getElementById('loaderTitle').textContent  = 'Opening File';
+    document.getElementById('loaderDesc').textContent   = file.name;
+
+    const iframe = document.getElementById('viewer');
+    iframe.style.display = 'none';
+    setDot(2, 'active');
+    animateProgress(50, 98, 4000);
+
+    clearTimeout(_loadTO);
+    _loadTO = setTimeout(()=>{
+      if(!iframeReady){
+        toast('Preview timed out');
+        setDot(2, 'failed');
+        showEntry('Preview failed', 'File could not be previewed in browser.', 'error-icon');
+      }
+    }, 8000);
+
+    iframe.onerror = function(){
+      clearTimeout(_loadTO);
+      if(iframeReady) return;
+      showEntry('Could not preview', 'Browser cannot render this file type.', 'error-icon');
+    };
+
+    iframe.onload = function(){
+      clearTimeout(_loadTO);
+      if(iframeReady) return;
+      setTimeout(()=>{
+        if(!iframeReady){ attempt = 2; revealViewer(file.name); }
+      }, 300);
+    };
+
+    iframe.src = blobURL;
+  }
+}
+
+/* ═══════════ DROPZONE DRAG/DROP ═══════════ */
+(function setupDrop(){
+  const dz = document.getElementById('dropzone');
+  dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('dragging'); });
+  dz.addEventListener('dragleave',()=> dz.classList.remove('dragging'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault();
+    dz.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if(!file) return;
+    if(!isFileSupported(file)){
+      toast('Unsupported file type');
+      return;
+    }
+    handleLocalFile(file);
+  });
+})();
+function reloadViewer(){
+  if(localObjURL){
+    const iframe = document.getElementById('viewer');
+    iframeReady = false;
+    toast('Reloading\u2026');
+    setTimeout(()=>{
+      showLoader();
+      resetDots();
+      setProgress(0);
+      iframe.src = '';
+      setTimeout(()=>{ iframe.src = localObjURL; }, 200);
+    }, 80);
+    return;
+  }
+  if(!currentFile) return;
+  iframeReady = false;
+  toast('Reloading\u2026');
+  setTimeout(()=>{
+    showLoader();
+    resetDots();
+    setProgress(0);
+    setTimeout(()=> tryLoad(currentFile, 1), 300);
+  }, 80);
+}
+
+/* ═══════════ SCROLL PROGRESS ═══════════ */
+function initScrollProgress(){
+  const bar = document.getElementById('scroll-progress');
+  const iframe = document.getElementById('viewer');
+  bar.style.display = 'block';
+
+  function updateProgress(){
+    try {
+      const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+      const el   = iDoc.documentElement;
+      const scrollTop    = el.scrollTop || iDoc.body.scrollTop || 0;
+      const scrollHeight = el.scrollHeight - el.clientHeight;
+      const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      bar.style.width = Math.min(pct, 100) + '%';
+    } catch(e) {
+      // Cross-origin iframe — track scroll of the viewer-wrap instead
+      const wrap = document.getElementById('viewer-wrap');
+      const scrollTop    = wrap.scrollTop;
+      const scrollHeight = wrap.scrollHeight - wrap.clientHeight;
+      const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      bar.style.width = Math.min(pct, 100) + '%';
+    }
+  }
+
+  // Try to attach to iframe scroll; fall back to wrap scroll
+  try {
+    const iWin = iframe.contentWindow;
+    iWin.addEventListener('scroll', updateProgress, {passive:true});
+  } catch(e){}
+
+  document.getElementById('viewer-wrap').addEventListener('scroll', updateProgress, {passive:true});
+  updateProgress();
+}
+
+/* ═══════════ DOWNLOAD ═══════════ */
+function downloadFile(){
+  const target = localObjURL || currentFile;
+  if(!target) return;
+
+  if(localObjURL){
+    // Blob — create temporary anchor
+    const a = document.createElement('a');
+    a.href = localObjURL;
+    a.download = document.getElementById('topbarTitle').textContent || 'document';
+    a.click();
+    toast('Downloading…');
+  } else {
+    // Remote URL — open download via anchor
+    const a = document.createElement('a');
+    a.href = target;
+    a.download = getFilename(target);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.click();
+    toast('Download started');
+  }
+}
+
+/* ═══════════ DROPZONE TOGGLE ═══════════ */
+function toggleDropzone(){
+  const dz = document.getElementById('dropzone');
+  const trigger = document.getElementById('uploadTrigger');
+  const isOpen = dz.classList.contains('open');
+  if(isOpen){
+    dz.classList.remove('open');
+    trigger.querySelector('svg').style.transform = '';
+  } else {
+    dz.classList.add('open');
+    trigger.querySelector('svg').style.transform = 'rotate(180deg)';
+  }
+}
+
+/* ═══════════ SUPPORTED FILE TYPES ═══════════ */
+const SUPPORTED_EXTS = ['pdf','doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp'];
+const SUPPORTED_MIME = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.oasis.opendocument.presentation'
+];
+
+function isFileSupported(file){
+  if(!file) return false;
+  const nameParts = file.name.split('.');
+  const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : '';
+  if(SUPPORTED_EXTS.includes(ext)) return true;
+  if(file.type && SUPPORTED_MIME.includes(file.type)) return true;
+  return false;
+}
+
+function onFileInputChange(file){
+  if(!file) return;
+  if(!isFileSupported(file)){
+    toast('Unsupported file type');
+    return;
+  }
+  handleLocalFile(file);
+}
+
+function goHome(){
+  // Revoke blob if any
+  if(localObjURL){ URL.revokeObjectURL(localObjURL); localObjURL = null; }
+  // Hide scroll progress bar
+  document.getElementById('scroll-progress').style.display = 'none';
+  document.getElementById('scroll-progress').style.width = '0%';
+  // Reset dropzone
+  const dz = document.getElementById('dropzone');
+  dz.classList.remove('open');
+  const trigger = document.getElementById('uploadTrigger');
+  if(trigger) trigger.querySelector('svg').style.transform = '';
+  showEntry('Open a Document','Drop a file or paste a URL to get started.','neutral-icon');
+  document.getElementById('urlInput').value = currentFile||'';
+  onInputChange();
+}
+
+function resetDots(){
+  for(let i=1;i<=MAX_RETRIES;i++) setDot(i,'');
+  setDot(1,'active');
+}
+
+/* ═══════════ INPUT HELPERS ═══════════ */
+function onInputChange(){
+  const v = document.getElementById('urlInput').value;
+  document.getElementById('clearBtn').style.display = v ? 'block' : 'none';
+}
+function clearInput(){
+  document.getElementById('urlInput').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('urlInput').focus();
+}
+function submitUrl(){
+  let val = normalize(document.getElementById('urlInput').value);
+  if(!isValid(val)){ toast('Enter a valid URL'); return; }
+  currentFile = val;
+  localObjURL = null;
+  showLoader();
+  resetDots();
+  setProgress(0);
+  // Update browser URL without reload
+  history.replaceState(null,'', window.location.pathname+'?file='+encodeURIComponent(val));
+  setTimeout(()=> tryLoad(val, 1), 380);
+}
+
+/* ═══════════ DARK MODE ═══════════ */
+(function(){
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if(mq.matches) document.documentElement.setAttribute('data-theme','dark');
+  mq.addEventListener('change', e=>
+    document.documentElement.setAttribute('data-theme', e.matches?'dark':''));
+})();
+
+/* ═══════════ INIT ═══════════ */
+window.onload = function(){
+  const rawFile = getParam('file');
+
+  if(!rawFile){
+    showEntry();
+    return;
+  }
+
+  const filePath = normalize(decodeURIComponent(rawFile));
+  if(!isValid(filePath)){
+    showEntry('Invalid URL',"The link doesn't look valid. Check it and try again.",'error-icon');
+    return;
+  }
+
+  currentFile = filePath;
+  document.getElementById('urlInput').value = filePath;
+  onInputChange();
+  setTimeout(()=> tryLoad(filePath, 1), 380);
+};
+</script>
+</body>
+</html>
   height: 100dvh;
 }
 
