@@ -671,7 +671,7 @@ function tryLoad(fileURL, att, isLocal, title){
   document.getElementById('loaderTitle').textContent  =
     att===1 ? 'Loading Document' : 'Retrying… ('+att+'/'+MAX_RETRIES+')';
   document.getElementById('loaderDesc').textContent   =
-    att===1 ? 'Via '+name : 'Switching to '+name+'…';
+    att===1 ? 'Via '+name : 'Retrying via '+name+'…';
 
   const iframe = document.getElementById('viewer');
   iframe.style.display = 'none';
