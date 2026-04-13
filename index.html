@@ -555,7 +555,7 @@ function resolveViewer(fileURL, att, isLocal){
   if(isOffice){
     switch(att){
       case 1: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer' };
-      case 2: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
+      case 2: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc,  name: 'Microsoft Office Viewer' };
       case 3: return { url: 'https://docs.google.com/viewer?url='+enc+'&embedded=true', name: 'Google Drive Viewer' };
       default: return { url: fileURL, name: 'Native Browser' };
     }
@@ -564,8 +564,8 @@ function resolveViewer(fileURL, att, isLocal){
   // PDF — Google Docs first, Microsoft as fallback
   switch(att){
     case 1: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
-    case 2: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc,  name: 'Microsoft Office Viewer' };
-    case 3: return { url: 'https://docs.google.com/viewer?url='+enc+'&embedded=true', name: 'Google Drive Viewer' };
+    case 2: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
+    case 3: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer' };
     default: return { url: fileURL, name: 'Native Browser' };
   }
 }
