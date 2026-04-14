@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Document Viewer</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -304,6 +304,7 @@ h2 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px; 
   padding-top: 10px;
   background: var(--bg);
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 #viewer {
   width: 100%; height: 100%;
@@ -311,8 +312,6 @@ h2 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px; 
   border: none; border-radius: 12px;
   display: block;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  touch-action: pan-x pan-y pinch-zoom;
-  overflow: auto;
 }
 
 /* ══ FOOTER — same bg as topbar/card ══ */
@@ -538,35 +537,35 @@ const PDF_EXTS    = ['pdf'];
 const DIRECT_EXTS = [];
 
 /* ═══════════ PROVIDER LOGIC ═══════════
-   1. Google Docs gview  (most reliable)
-   2. Google Drive viewer (alternate endpoint)
-   3. Microsoft Office Online (final fallback for supported types)
-   For local Blob URLs we skip cloud viewers entirely → direct embed.
+   PDF:  1→ Google gview,  2→ Google viewer,  3→ Microsoft Office
+   DOCS: 1→ Microsoft,     2→ Microsoft,      3→ Google gview
+   Local Blob URLs → direct embed, no cloud viewer.
+   isGoogle flag tells tryLoad to apply the blank-page failure check.
 ══════════════════════════════════════ */
 function resolveViewer(fileURL, att, isLocal){
   const ext = getExt(fileURL) || 'pdf';
   const enc = encodeURIComponent(fileURL);
 
-  if(isLocal) return { url: fileURL, name: 'Local Preview' };
-  if(DIRECT_EXTS.includes(ext)) return { url: fileURL, name: 'Native Browser' };
+  if(isLocal) return { url: fileURL, name: 'Local Preview', isGoogle: false };
+  if(DIRECT_EXTS.includes(ext)) return { url: fileURL, name: 'Native Browser', isGoogle: false };
 
   const isOffice = ['doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp'].includes(ext);
 
   if(isOffice){
     switch(att){
-      case 1: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer' };
-      case 2: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc,  name: 'Microsoft Office Viewer' };
-      case 3: return { url: 'https://docs.google.com/viewer?url='+enc+'&embedded=true', name: 'Google Drive Viewer' };
-      default: return { url: fileURL, name: 'Native Browser' };
+      case 1: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer', isGoogle: false };
+      case 2: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer', isGoogle: false };
+      case 3: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer',     isGoogle: true  };
+      default: return { url: fileURL, name: 'Native Browser', isGoogle: false };
     }
   }
 
-  // PDF — Google Docs first, Microsoft as fallback
+  // PDF — Google gview first, Google viewer second, Microsoft as final fallback
   switch(att){
-    case 1: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
-    case 2: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer' };
-    case 3: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc, name: 'Microsoft Office Viewer' };
-    default: return { url: fileURL, name: 'Native Browser' };
+    case 1: return { url: 'https://docs.google.com/gview?url='+enc+'&embedded=true',  name: 'Google Docs Viewer',      isGoogle: true  };
+    case 2: return { url: 'https://docs.google.com/viewer?url='+enc+'&embedded=true', name: 'Google Drive Viewer',     isGoogle: true  };
+    case 3: return { url: 'https://view.officeapps.live.com/op/embed.aspx?src='+enc,  name: 'Microsoft Office Viewer', isGoogle: false };
+    default: return { url: fileURL, name: 'Native Browser', isGoogle: false };
   }
 }
 
@@ -666,12 +665,18 @@ function tryLoad(fileURL, att, isLocal, title){
   // Auto-complete bar after timeout so it always reaches 100 visually
   setTimeout(()=>{ if(!iframeReady) setProgress(100); }, att===1 ? 9000 : 6500);
 
-  const {url, name} = resolveViewer(fileURL, att, isLocal);
+  const {url, name, isGoogle} = resolveViewer(fileURL, att, isLocal);
+  const prev = att > 1 ? resolveViewer(fileURL, att-1, isLocal) : null;
+  // "Retrying" if same viewer name OR both attempts use Google (different Google endpoints)
+  const isRetry = prev && (prev.name === name || (prev.isGoogle && isGoogle));
+
   document.getElementById('providerName').textContent = name;
   document.getElementById('loaderTitle').textContent  =
     att===1 ? 'Loading Document' : 'Retrying… ('+att+'/'+MAX_RETRIES+')';
   document.getElementById('loaderDesc').textContent   =
-    att===1 ? 'Via '+name : 'Retrying via '+name+'…';
+    att===1 ? 'Via '+name
+    : isRetry ? 'Retrying via '+name+'…'
+    : 'Switching to '+name+'…';
 
   const iframe = document.getElementById('viewer');
   iframe.style.display = 'none';
@@ -697,30 +702,42 @@ function tryLoad(fileURL, att, isLocal, title){
     clearTimeout(_loadTO);
     if(iframeReady) return;
 
-    // For Google viewer: blank/error frames still fire onload.
-    // Try to detect by reading document title or body length via contentDocument.
-    // For cross-origin frames we can't read content — rely on a post-load blank check:
-    // Google gview shows a blank white page when it can't load the doc.
-    // We give it a generous settle time and then check size heuristic via iframe dimensions
-    // (the iframe stays tiny/blank if the doc failed). We rely on the timeout as the guard.
-    const settleMs = isLocal ? 300 : (att === 3 ? 2500 : 1200);
+    // Google viewer blank/error pages still fire onload — need extra settle + body check.
+    // Microsoft viewer reliably loads or errors; skip blank-check for MS to avoid false retries.
+    // Give Google a longer settle on the last attempt; local blobs settle fastest.
+    const settleMs = isLocal ? 300 : (isGoogle ? (att === MAX_RETRIES ? 2500 : 1200) : 800);
 
     setTimeout(()=>{
       if(!iframeReady){
-        // Check if iframe has rendered content by seeing if it loaded something real
-        // For same-origin blobs we can check; for cross-origin we trust onload
         try {
           const doc = iframe.contentDocument || iframe.contentWindow.document;
           const bodyText = doc.body ? doc.body.innerText.trim() : '';
-          const bodyHTML = doc.body ? doc.body.innerHTML.trim() : '';
-          // Google viewer blank error page has very short body or just a reload button
-          if(bodyText.length < 30 && !isLocal){
-            setDot(att,'failed');
-            _retryTO = setTimeout(()=> tryLoad(fileURL, att+1, isLocal, title), 500);
-            return;
+          const bodyHTML = doc.body ? doc.body.innerHTML : '';
+
+          if(isGoogle && !isLocal){
+            // Google viewer returns a near-empty page on failure
+            if(bodyText.length < 30){
+              setDot(att,'failed');
+              _retryTO = setTimeout(()=> tryLoad(fileURL, att+1, isLocal, title), 500);
+              return;
+            }
+          } else if(!isGoogle && !isLocal){
+            // MS Office viewer error pages contain known error strings
+            const msErrorSignals = [
+              'is not accessible', 'cannot open', 'something went wrong',
+              'error', 'cannot be displayed', 'not found', 'invalid'
+            ];
+            const lowerText = bodyText.toLowerCase();
+            const lowerHTML = bodyHTML.toLowerCase();
+            const hasError = msErrorSignals.some(s => lowerText.includes(s) || lowerHTML.includes(s));
+            if(hasError || bodyText.length < 30){
+              setDot(att,'failed');
+              _retryTO = setTimeout(()=> tryLoad(fileURL, att+1, isLocal, title), 500);
+              return;
+            }
           }
         } catch(e) {
-          // Cross-origin — can't read. If we got here, trust that it loaded.
+          // Cross-origin — cannot read iframe body, trust that it loaded.
         }
         revealViewer(title);
       }
