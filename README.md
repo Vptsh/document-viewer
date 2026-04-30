@@ -127,7 +127,7 @@ Handles:
 
 ### Run Locally
 ```bash
-git clone https://github.com/your-username/document-viewer.git
+git clone https://github.com/psvineetdocument-viewer.git
 cd document-viewer
 open index.html
 ```
